@@ -10,7 +10,7 @@ This is the first and only *individual* (as opposed to *team*) this semester.
 Term: Fall 2019
 
 + Projec title: XXXXXX 
-+ This project is conducted by [Qiqi Wu]
++ This project is conducted by Qiqi Wu
 
 + Project summary: This project aims at detecting patterns and characteristics of different types of song lyrics. The project contains an exploratory data analysis and application of text mining techniques and NLP methods to analyze words. The results show that ....... 
 
