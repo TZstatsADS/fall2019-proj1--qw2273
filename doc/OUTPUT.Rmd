@@ -1,0 +1,179 @@
+---
+title: "What we sing when we sing rap songs"
+author: "qw2273"
+date: "9/17/2019"
+output: html_document
+---
+
+Hip-pop music nowadays is more than just music. But what's your first impression of Hip-Hop/rap music? For some people, it's about drugs and sex. For some people, the answer may be violence and have negative impact on teens. But are these just stereotypes or Hip-hop music does have a negative effect on people's, especially  teenagers' behavior？
+I try to answering this question by comparing top 15 words usage in hip-hop music and trends of popular words usage over  decades, and uxsing sentimental analysis to find the most 'negative' one among all hip-hop songs in data and the rapper who tend to have the most usage of negative words in his/her songs. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r load libraries, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(tidytext) 
+library(wordcloud)
+library(textdata)# use nrc 
+library(wordcloud2)
+library(gridExtra) 
+library(topicmodels)
+library(Hmisc)
+```
+
+
+```{r load data}
+load('../output/processed_lyrics.RData') 
+```
+
+##  Q1 How does the word usage changes over decades? 
+```{r}
+
+dt_lyrics_new = dt_lyrics  %>% mutate(time = ifelse(year %in% 1970:1979, "1970s",
+                           ifelse(year %in% 1980:1989, "1980s",
+                             ifelse(year %in% 1990:1999, "1990s",
+                               ifelse(year %in% 2000:2009, "2000s",
+                                 ifelse(year %in% 2010:2019, "2010s", "before 1970s"))))))    
+song_num_by_decade = dt_lyrics_new %>% filter(genre == 'Hip-Hop') %>% group_by(time) %>% summarise(Count = n()) %>% ungroup() 
+
+ggplot( song_num_by_decade, aes(x = factor(time) , y = Count)) + geom_bar(stat="identity",fill="steelblue")+geom_text(aes(label=Count))
+
+```
+Since there are not so many  hip-hop song before 1990s, so I will forcus my analysis on those songs over last 30 years. 
+
+#### Count the word frequency by for each decade
+Note: If a word appears for a few times in a song's lyrics, it will be counted only once. I think this makes more sense when determine the overall popularity of a word in one decade, since there might be some cases that a songwriter might prefer that word and use it repetitively in a song, say for 100 times. Therefore, adding 100 to the word's total count probably won't represent  "true" popularity of that word. 
+
+```{r word frequency count}
+tidy_lyrics = dt_lyrics_new  %>% filter(genre == 'Hip-Hop' & time %in% c("1990s","2000s","2010s")) %>% unnest_tokens(word, stemmedwords)
+
+tidy_lyrics_raw  =dt_lyrics_new  %>% filter(genre == 'Hip-Hop' & time %in% c("1990s","2000s","2010s")) %>% unnest_tokens(word,  lyrics) 
+```
+
+
+```{r}
+# 2010s 
+word_counts_10s = tidy_lyrics %>% filter(time == '2010s')  %>% group_by(id, word)  %>% count(word) %>% ungroup() %>% select(id, word, n) 
+word_counts_10s_top15 = word_counts_10s %>% count(word,sort = T) %>% top_n(15,n)
+
+# 2000s 
+word_counts_00s = tidy_lyrics %>% filter(time == '2000s' ) %>% group_by(id, word)  %>% count(word) %>% ungroup() %>% select(id, word, n)
+word_counts_00s_top15 = word_counts_00s %>% count(word,sort = T) %>% top_n(15,n)
+
+#1990s
+word_counts_90s = tidy_lyrics %>% filter(time == '1990s' ) %>% group_by(id, word)  %>% count(word) %>% ungroup() %>% select(id, word, n)
+word_counts_90s_top15 = word_counts_90s %>% count(word,sort = T) %>% top_n(15,n)
+
+```
+
+```{r }
+p1 = ggplot(word_counts_10s_top15,aes(x= reorder(word, n), y= n )) + 
+  geom_col()+ 
+  coord_flip()  + xlab("") +
+  scale_y_continuous(name = 'word frequency') + 
+  ggtitle("word frequency in current decade") 
+
+p2= ggplot(word_counts_00s_top15,aes(x= reorder(word, n), y= n )) + 
+  geom_col()+ 
+  coord_flip()  + xlab("") +
+  scale_y_continuous(name = 'word frequency') + 
+  ggtitle("word frequency in 2000s") 
+
+p3 = ggplot(word_counts_90s_top15,aes(x= reorder(word, n), y= n )) + 
+  geom_col()+ 
+  coord_flip()  + xlab("") +
+  scale_y_continuous(name = 'word frequency') + 
+  ggtitle("word frequency in 1990s") 
+
+
+grid.arrange(p1, p2, p3,ncol=3, nrow =1) 
+
+```
+
+```{r}
+word_counts_wc =data.frame(word_counts_10s %>% count(word,sort = T) )
+wordcloud(word_counts_wc$word,word_counts_wc$n,
+          max.words=100,scale=c(3.5,0.1), 
+         min.freq=3,
+          random.order=FALSE,
+          random.color=FALSE,
+          colors=brewer.pal(9,"Blues"))
+
+word_counts_wc2 =data.frame(word_counts_00s %>% count(word,sort = T) )
+wordcloud(word_counts_wc2$word,word_counts_wc2$n,
+          max.words=100,scale=c(3.5,0.08), 
+         min.freq=3,
+          random.order=FALSE,
+          random.color=FALSE,
+          colors=brewer.pal(9,"Blues"))
+
+word_counts_wc3 =data.frame(word_counts_90s %>% count(word,sort = T) )
+wordcloud(word_counts_wc3$word,word_counts_wc3$n,
+          max.words=100,scale=c(3.5,0.1), 
+         min.freq=3,
+          random.order=FALSE,
+          random.color=FALSE,
+          colors=brewer.pal(9,"Blues"))
+
+```
+
+The top 15 popular words list doesn't vary too much over 3 decades. 
+Despite the fact that there're all some negative words pop up in the list among all 3 three decades,  the lyrics in recent two decades tend to include more profanity and racially charged words. From the word frequency plot, it is not hard to see that word 'time' and 'love' appear among all songs in each decade. 
+
+But let's take a closer to the list and see how the usage of word changes over time. 
+
+## Popularity of Most Common Words
+Since the data doesn't include songs realsed in recent 3 years, so I decide to use the ratio of occurrence of a word in a decade to total number of songs in that decade and compared ratios to find this word's usage trend. 
+```{r Popularity of Most Common Words over 3 decades}
+top_words = c(inner_join(word_counts_10s_top15,word_counts_00s_top15, by='word' ) %>% inner_join(., word_counts_90s_top15, by='word')) $word
+
+df1 = word_counts_90s_top15 %>% filter(word %in%  top_words )%>% mutate(time = '1990s')
+df2 = word_counts_00s_top15 %>% filter(word %in%  top_words )%>% mutate(time = '2000s')
+df3 = word_counts_10s_top15 %>% filter(word %in%  top_words )%>% mutate(time = '2010s')
+df_top_cnts = rbind(df1,df2,df3)
+
+cbnd_df = left_join(df_top_cnts, song_num_by_decade%>% filter(time %in% c("1990s","2000s","2010s")),by = "time") 
+cbnd_df_ratio = cbnd_df %>% mutate(ratio = n/Count) %>% select(word, ratio, time) 
+```
+
+
+```{r}
+p = ggplot(data = cbnd_df_ratio , aes(x = factor(time), y = ratio, group=word, color = word))  +  geom_line() +  geom_point()
+p
+```
+It is found that the percent of usage word 'love' kept increasing from 1990s to 2010s and 'time' kept decreasing. In the meantime, the usage of other popular words behave similar and increased and then dropped in current decade. And by viewing the list, parents began to worried about whether they should allow their children to keep listen to hip-hop songs. But are there any hip-hop songs that don't contain negative words or contain a minimum amount of negative words so it will not have large impact at youths? So start with this question, I conduct sentimental analysis on all songs in hip-pop genre from 1990s to 2010s using bing lexicon which categorizes words in a binary fashion into positive and negative categories.
+
+
+##### Q2: Five songs that  have positive(neutral) impact on youths and five songs that  should be banned 
+
+```{r}
+
+bing_pos <- get_sentiments("bing") %>% 
+  filter(sentiment == "positive" ) 
+
+dt = tidy_lyrics  %>% 
+  inner_join(get_sentiments("bing"), by ='word')  %>%  group_by(id,sentiment) %>%  
+  summarise(Cnt = n()) 
+
+dt1 = dt %>% spread(sentiment, value = Cnt) %>% mutate(score = positive -negative )
+song_name  = tidy_lyrics %>% select(id, song) %>% distinct()
+dt2 = dt1  %>% inner_join(song_name , by ='id')  %>%  select(song, score )
+dt2_top10 = dt2%>% arrange(desc(score)) %>% head(10)
+
+dt2_end10  = dt2%>% arrange(desc(score)) %>% filter(is.na(score) == F) %>% tail(10)
+
+p1 = ggplot(dt2_top10, aes(x= song, y= score, fill = factor(song))) + geom_bar(stat = 'identity') + coord_flip()
+
+p2= ggplot(dt2_end10, aes(x= song, y= score, fill = factor(song))) + geom_bar(stat = 'identity') + coord_flip()
+
+p1
+p2
+```
+
+From the plot, I plot song  by total sentiment score and it can be used as a guide for radio station to decide which song to play in public in day time. 
+
