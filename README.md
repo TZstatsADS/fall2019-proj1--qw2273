@@ -9,10 +9,10 @@ This is the first and only *individual* (as opposed to *team*) this semester.
 
 Term: Fall 2019
 
-+ Projec title: XXXXXX 
++ Projec title: What we sing when we sing rap songs 
 + This project is conducted by Qiqi Wu
 
-+ Project summary: This project aims at detecting patterns and characteristics of different types of song lyrics. The project contains an exploratory data analysis and application of text mining techniques and NLP methods to analyze words. The results show that ....... 
++ Project summary: This project aims at detecting patterns and characteristics of different types of song lyrics. The project contains an exploratory data analysis and application of text mining techniques and sentimental analysis methods to analyze lyrics. 
 
 Following [suggestions](http://nicercode.github.io/blog/2013-04-05-projects/) by [RICH FITZJOHN](http://nicercode.github.io/about/#Team) (@richfitz). This folder is orgarnized as follows.
 
